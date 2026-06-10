@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from app.core import get_session
 from app.models import Subscription, Tenant
 from app.schemas import EventCreate
-from app.tasks import send_event
+from app.tasks import dispatch_event
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -34,7 +34,7 @@ def create_events(
         response.status_code = 200
         return {"status": "skipped", "reason": "no subscribers"}
 
-    send_event.delay(
+    dispatch_event.delay(
         events.event_id, events.tenant_id, events.event_type, events.payload
     )
 

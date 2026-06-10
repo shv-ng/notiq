@@ -16,4 +16,4 @@ migrate:
   uv run alembic upgrade head
 
 celery:
-  uv run celery -A app.tasks.event worker --loglevel=info
+  uv run celery -A app.core worker --loglevel=info

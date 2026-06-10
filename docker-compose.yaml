@@ -25,6 +25,16 @@ services:
             - __pycache__/
             - .git
             - .venv
+  celery:
+    build: .
+    ports:
+      - "8000:8000"
+    command: uv run celery -A app.core worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
 
   redis:
     image: redis:alpine

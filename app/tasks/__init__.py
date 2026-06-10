@@ -1,3 +1,3 @@
-from .event import send_event
+from .delivery import dispatch_event
 
-__all__ = ["send_event"]
+__all__ = ["dispatch_event"]
