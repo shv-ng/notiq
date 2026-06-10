@@ -13,4 +13,4 @@ class TenantRead(BaseModel):
 class TenantCreated(BaseModel):
     id: int
     name: str
-    api_key_hash: str
+    api_key: str

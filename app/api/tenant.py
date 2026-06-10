@@ -22,38 +22,26 @@ def create_tenant(tenant: TenantCreate, session: Session = Depends(get_session))
         api_key_hash=api_key_hash,
     )
 
-    try:
-        session.add(new_tenant)
-        session.commit()
-        session.refresh(new_tenant)
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"fail to create tenant: {e}",
-        )
+    session.add(new_tenant)
+    session.commit()
+    session.refresh(new_tenant)
 
-    if not new_tenant or new_tenant.id is None:
-        raise HTTPException(
-            status_code=500,
-            detail="fail to create tenant",
-        )
+    assert new_tenant.id is not None, "Database failed to generate a tenant ID"
 
     return TenantCreated(
         id=new_tenant.id,
         name=new_tenant.name,
-        api_key_hash=new_tenant.api_key_hash,
+        api_key=api_key,
     )
 
 
 @router.get("/{id}", response_model=TenantRead)
 def get_tenant(id: int, session: Session = Depends(get_session)):
+    query = select(Tenant).where(
+        Tenant.id == id,
+    )
     try:
-        tenant = session.exec(
-            select(Tenant).where(
-                Tenant.id == id,
-            )
-        ).one()
+        tenant = session.exec(query).one()
     except NoResultFound:
         raise HTTPException(
             status_code=404,
@@ -64,13 +52,10 @@ def get_tenant(id: int, session: Session = Depends(get_session)):
 
 
 @router.delete("/{id}", status_code=204)
-def delete_subscription(id: int, session: Session = Depends(get_session)):
+def delete_tenant(id: int, session: Session = Depends(get_session)):
+    query = select(Tenant).where(Tenant.id == id)
     try:
-        tenant = session.exec(
-            select(Tenant).where(
-                Tenant.id == id,
-            )
-        ).one()
+        tenant = session.exec(query).one()
     except NoResultFound:
         raise HTTPException(
             status_code=404,

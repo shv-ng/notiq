@@ -19,16 +19,9 @@ def create_subscription(
         target_url=subs.target_url,
     )
 
-    try:
-        session.add(new_subscription)
-        session.commit()
-        session.refresh(new_subscription)
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"fail to create subscription: {e}",
-        )
+    session.add(new_subscription)
+    session.commit()
+    session.refresh(new_subscription)
 
     return new_subscription
 
@@ -55,14 +48,14 @@ def get_subscriptions(
 @router.get("/{id}", response_model=SubscriptionRead)
 def get_subscription(id: int, session: Session = Depends(get_session)):
     tenant_id = 1  # TODO: get tenant id from auth header
+    query = select(Subscription).where(
+        Subscription.tenant_id == tenant_id,
+        Subscription.id == id,
+        Subscription.is_active,
+    )
+
     try:
-        subscription = session.exec(
-            select(Subscription).where(
-                Subscription.tenant_id == tenant_id,
-                Subscription.id == id,
-                Subscription.is_active,
-            )
-        ).one()
+        subscription = session.exec(query).one()
     except NoResultFound:
         raise HTTPException(
             status_code=404,
@@ -75,14 +68,13 @@ def get_subscription(id: int, session: Session = Depends(get_session)):
 @router.delete("/{id}", status_code=204)
 def delete_subscription(id: int, session: Session = Depends(get_session)):
     tenant_id = 1  # TODO: get tenant id from auth header
+    query = select(Subscription).where(
+        Subscription.tenant_id == tenant_id,
+        Subscription.id == id,
+        Subscription.is_active,
+    )
     try:
-        subscription = session.exec(
-            select(Subscription).where(
-                Subscription.tenant_id == tenant_id,
-                Subscription.id == id,
-                Subscription.is_active,
-            )
-        ).one()
+        subscription = session.exec(query).one()
     except NoResultFound:
         raise HTTPException(
             status_code=404,
