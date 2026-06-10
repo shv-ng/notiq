@@ -1,13 +1,11 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
+from sqlmodel import SQLModel
 
 from alembic import context
-
-from app.api.core.config import settings
-from sqlmodel import SQLModel
-from app.api.models import *
+from app.core import settings
+from app.models import *
 
 config = context.config
 

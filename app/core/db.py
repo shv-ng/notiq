@@ -1,9 +1,12 @@
-from sqlmodel import create_engine, Session
+from collections.abc import Generator
+
+from sqlmodel import Session, create_engine
+
 from .config import settings
 
 engine = create_engine(settings.database_url)
 
 
-def get_session():
+def get_session() -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session

@@ -1,13 +1,14 @@
-from sqlmodel import text
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from sqlmodel import text
+
+from app.api import subscription_router
+from app.core import engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from api.core.db import engine
-
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
 
@@ -16,7 +17,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.include_router(subscription_router)
+
 
 @app.get("/")
-def read_root():
+def health():
     return {"status": "ok"}
