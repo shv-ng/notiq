@@ -5,7 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "alembic>=1.18.4",
     "fastapi[standard]>=0.136.3",
     "psycopg[binary]>=3.3.4",
     "pydantic-settings>=2.14.1",
@@ -15,3 +14,8 @@ dependencies = [
 
 [tool.ruff]
 exclude = ["alembic"]
+
+[dependency-groups]
+dev = [
+    "alembic>=1.18.4",
+]
