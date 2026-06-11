@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session, select
 
-from app.core import get_session
+from app.core import get_current_tenant, get_session
 from app.models import Tenant
 from app.schemas import TenantCreate, TenantCreated, TenantRead
 
@@ -35,8 +35,11 @@ def create_tenant(tenant: TenantCreate, session: Session = Depends(get_session))
     )
 
 
-@router.get("/{id}", response_model=TenantRead)
-def get_tenant(id: int, session: Session = Depends(get_session)):
+@router.get("/me", response_model=TenantRead)
+def get_tenant(
+    id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
+):
     query = select(Tenant).where(
         Tenant.id == id,
     )
@@ -51,8 +54,11 @@ def get_tenant(id: int, session: Session = Depends(get_session)):
     return tenant
 
 
-@router.delete("/{id}", status_code=204)
-def delete_tenant(id: int, session: Session = Depends(get_session)):
+@router.delete("/", status_code=204)
+def delete_tenant(
+    id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
+):
     query = select(Tenant).where(Tenant.id == id)
     try:
         tenant = session.exec(query).one()

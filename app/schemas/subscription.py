@@ -4,7 +4,6 @@ from pydantic import BaseModel, HttpUrl
 
 
 class SubscriptionCreate(BaseModel):
-    tenant_id: int = 0
     event_type: str = "event_type"
     target_url: HttpUrl
 

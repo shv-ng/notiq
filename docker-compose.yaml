@@ -3,7 +3,7 @@ services:
     build: .
     ports:
       - "8000:8000"
-    command: uv run fastapi dev --host 0.0.0.0 --port 8000
+    command: bash -c "uv run alembic upgrade head && uv run fastapi dev --host 0.0.0.0 --port 8000"
     env_file:
       - .env
     depends_on:
@@ -27,8 +27,6 @@ services:
             - .venv
   celery:
     build: .
-    ports:
-      - "8000:8000"
     command: uv run celery -A app.core worker --loglevel=info
     env_file:
       - .env

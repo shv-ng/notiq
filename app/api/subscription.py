@@ -11,10 +11,13 @@ router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
 @router.post("/", response_model=SubscriptionRead, status_code=201)
 def create_subscription(
-    subs: SubscriptionCreate, session: Session = Depends(get_session)
+    subs: SubscriptionCreate,
+    tenant_id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
 ):
     data = subs.model_dump(mode="json")
     new_subscription = Subscription(**data)
+    new_subscription.tenant_id = tenant_id
 
     session.add(new_subscription)
     session.commit()
