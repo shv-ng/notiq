@@ -3,21 +3,22 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-    postgres_user: str = "postgres"
-    postgres_password: str = "postgres"
-    postgres_host: str = "postgres"
-    postgres_port: int = 5432
-    postgres_db: str = "postgres"
 
-    redis_url: str = "redis://redis:6379/0"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_HOST: str = "postgres"
+    POSTGRES_POST: int = 5432
+    POSTGRES_DB: str = "postgres"
 
-    secret_key: str = "abc123"
+    REDIS_URL: str = "redis://redis:6379/0"
+
+    SECRET_KEY: str = "abc123"
 
     @property
     def database_url(self) -> str:
         return (
-            f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}"
-            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+            f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_POST}/{self.POSTGRES_DB}"
         )
 
 
