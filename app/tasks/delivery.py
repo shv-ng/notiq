@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 from app.core import celery_app as app
 from app.core import engine, settings
 from app.models import DeadLetterQueue, Subscription
-from app.services import deliver_event, push_to_dlq
+from app.services import deliver_event, is_rate_limited, push_to_dlq
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,10 @@ def dispatch_event(
 
         if not subscription:
             return
+
+    if is_rate_limited(tenant_id=subscription.tenant_id):
+        self.retry(countdown=60)
+        return
 
     current_attempt = self.request.retries + 1
 
