@@ -202,3 +202,39 @@ Implemented via Redis sorted sets — members are timestamped UUIDs, expired out
 | `REDIS_URL` | `redis://redis:6379/0` | Redis connection URL |
 | `SECRET_KEY` | `abc123` | HMAC signing key — **change in prod** |
 | `CELERY_MAX_RETRIES` | `5` | Max delivery attempts before DLQ |
+
+
+---
+ 
+## Performance
+ 
+Benchmarked locally (Docker, single Celery worker) using [`hey`](https://github.com/rakyll/hey).
+ 
+### Event ingestion — `POST /events/`
+ 
+| Concurrency | Requests | RPS | p50 | p95 | p99 |
+|-------------|----------|-----|-----|-----|-----|
+| 50 | 1000 | 114 | 384ms | 824ms | 1210ms |
+| 200 | 200 | ~10 | 652ms | 828ms | — |
+ 
+At c=50 all 1000 requests returned `202`. At c=200 the app saturated — 177/200 timed out client-side (default `hey` timeout). Bottleneck is synchronous SQLAlchemy session acquisition under high concurrency; connection pool exhaustion, not business logic.
+ 
+### Delivery log reads — `GET /delivery-logs/`
+ 
+| Concurrency | Requests | RPS | p50 | p95 | p99 |
+|-------------|----------|-----|-----|-----|-----|
+| 20 | 500 | 124 | 145ms | 259ms | 323ms |
+ 
+Each response ~12 KB (50 logs). Stable under load, no errors.
+ 
+### Query plan — delivery log fetch
+ 
+```
+SELECT * FROM deliverylog WHERE tenant_id = 1 ORDER BY created_at DESC LIMIT 50;
+ 
+Execution Time: 0.900 ms  |  Planning Time: 6.035 ms
+Rows examined: 99  →  50 returned  (quicksort, 38kB memory)
+```
+ 
+Seq scan on `deliverylog` is acceptable at current data volume — `tenant_id` index exists but planner prefers seq scan when row count is low. Will switch to index scan as table grows; no action needed now.
+ 
