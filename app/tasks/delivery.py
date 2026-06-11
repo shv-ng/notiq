@@ -7,8 +7,8 @@ from sqlmodel import Session, select
 
 from app.core import celery_app as app
 from app.core import engine, settings
-from app.models import Subscription
-from app.services import deliver_event
+from app.models import DeadLetterQueue, Subscription
+from app.services import deliver_event, push_to_dlq
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,19 @@ def dispatch_event(
 
     if success:
         logger.info(f"Event delivered: {event_id=}, {subscription_id=}, {http_status=}")
+        with Session(engine) as session:
+            dlqs = session.exec(
+                select(DeadLetterQueue).where(
+                    DeadLetterQueue.subscription_id == subscription_id,
+                    DeadLetterQueue.event_id == event_id,
+                    not DeadLetterQueue.is_resolved,
+                )
+            ).all()
+
+            for dlq in dlqs:
+                dlq.is_resolved = True
+            session.commit()
+
         return
 
     logger.error(
@@ -63,12 +76,3 @@ def dispatch_event(
             f"Max retries exhausted: {event_id=}, {subscription_id=}. Shipping to DLQ."
         )
         push_to_dlq(event_id, subscription.tenant_id, subscription_id, payload, err_msg)
-
-
-def push_to_dlq(
-    event_id: str,
-    tenant_id: int,
-    subscription_id: int,
-    payload: dict,
-    err_msg: str | None,
-): ...

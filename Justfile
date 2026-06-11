@@ -3,6 +3,9 @@ format:
   ruff check --fix --unsafe-fixes
   ruff format .
 
+lint:
+  ruff check .
+
 dev:
   uv run fastapi dev
 
