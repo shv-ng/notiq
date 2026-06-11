@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session, select
 
-from app.core import get_session
+from app.core import get_current_tenant, get_session
 from app.models import Subscription
 from app.schemas import SubscriptionCreate, SubscriptionRead
 
@@ -25,10 +25,10 @@ def create_subscription(
 
 @router.get("/", response_model=list[SubscriptionRead])
 def get_subscriptions(
-    event_type: str | None = None, session: Session = Depends(get_session)
+    event_type: str | None = None,
+    tenant_id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
 ):
-    tenant_id = 1  # TODO: get tenant id from auth header
-
     query = select(Subscription).where(
         Subscription.tenant_id == tenant_id,
         Subscription.is_active,
@@ -43,8 +43,11 @@ def get_subscriptions(
 
 
 @router.get("/{id}", response_model=SubscriptionRead)
-def get_subscription(id: int, session: Session = Depends(get_session)):
-    tenant_id = 1  # TODO: get tenant id from auth header
+def get_subscription(
+    id: int,
+    tenant_id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
+):
     query = select(Subscription).where(
         Subscription.tenant_id == tenant_id,
         Subscription.id == id,
@@ -63,8 +66,11 @@ def get_subscription(id: int, session: Session = Depends(get_session)):
 
 
 @router.delete("/{id}", status_code=204)
-def delete_subscription(id: int, session: Session = Depends(get_session)):
-    tenant_id = 1  # TODO: get tenant id from auth header
+def delete_subscription(
+    id: int,
+    tenant_id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
+):
     query = select(Subscription).where(
         Subscription.tenant_id == tenant_id,
         Subscription.id == id,

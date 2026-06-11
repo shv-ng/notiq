@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, case, col, func, select
 
-from app.core import get_session
+from app.core import get_current_tenant, get_session
 from app.models import DeliveryLog
 from app.schemas import DeliveryLogRead
 from app.schemas.delivery_log import DeliveryLogStats
@@ -16,11 +16,11 @@ def get_delivery_logs(
     success: bool | None = None,
     limit: int = 50,
     offset: int = 0,
+    tenant_id: int = Depends(get_current_tenant),
     session: Session = Depends(get_session),
 ):
     limit = min(limit, 200)
 
-    tenant_id = 1  # TODO: get tenant id from auth header
     query = (
         select(DeliveryLog)
         .where(DeliveryLog.tenant_id == tenant_id)
@@ -41,10 +41,9 @@ def get_delivery_logs(
 
 @router.get("/stats", response_model=DeliveryLogStats)
 def get_delivery_log_stats(
+    tenant_id: int = Depends(get_current_tenant),
     session: Session = Depends(get_session),
 ):
-    tenant_id = 1  # TODO: get tenant id from auth header
-
     query = select(
         func.coalesce(func.count(), 0).label("total_attempts"),
         func.coalesce(

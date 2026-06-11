@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from app.core import get_session
+from app.core.auth import get_current_tenant
 from app.models import DeadLetterQueue
 from app.schemas.dlq import DeadLetterQueueRead
 from app.tasks import dispatch_event
@@ -13,8 +14,10 @@ router = APIRouter(prefix="/dlq", tags=["dead-letter-queue"])
 
 
 @router.get("/", response_model=list[DeadLetterQueueRead])
-def get_dlq(session: Session = Depends(get_session)):
-    tenant_id = 1  # TODO: get tenant id from auth header
+def get_dlq(
+    tenant_id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
+):
     dlq = session.exec(
         select(DeadLetterQueue).where(
             DeadLetterQueue.tenant_id == tenant_id,
@@ -25,8 +28,11 @@ def get_dlq(session: Session = Depends(get_session)):
 
 
 @router.post("/{id}/replay", status_code=204)
-def replay_dlq(id: int, session: Session = Depends(get_session)):
-    tenant_id = 1  # TODO: get tenant id from auth header
+def replay_dlq(
+    id: int,
+    tenant_id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
+):
     query = select(DeadLetterQueue).where(
         DeadLetterQueue.tenant_id == tenant_id,
         DeadLetterQueue.id == id,
@@ -58,8 +64,11 @@ def replay_dlq(id: int, session: Session = Depends(get_session)):
 
 
 @router.post("/{id}/resolve", status_code=204)
-def resolve_dlq(id: int, session: Session = Depends(get_session)):
-    tenant_id = 1  # TODO: get tenant id from auth header
+def resolve_dlq(
+    id: int,
+    tenant_id: int = Depends(get_current_tenant),
+    session: Session = Depends(get_session),
+):
     query = select(DeadLetterQueue).where(
         DeadLetterQueue.tenant_id == tenant_id,
         DeadLetterQueue.id == id,
