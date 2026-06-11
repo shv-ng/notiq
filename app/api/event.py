@@ -23,22 +23,24 @@ def create_events(
             status_code=404,
             detail=f"tenant not found, id: {events.tenant_id}",
         )
-    subscriber = session.exec(
+    subscribers = session.exec(
         select(Subscription).where(
             Subscription.is_active,
             Subscription.tenant_id == events.tenant_id,
             Subscription.event_type == events.event_type,
         )
-    ).first()
-    if not subscriber:
+    ).all()
+
+    if not subscribers:
         response.status_code = 200
         return {"status": "skipped", "reason": "no subscribers"}
 
-    dispatch_event.delay(
-        subscription_id=subscriber.id,
-        event_id=events.event_id,
-        payload=events.payload,
-    )
+    for subscriber in subscribers:
+        dispatch_event.delay(
+            subscription_id=subscriber.id,
+            event_id=events.event_id,
+            payload=events.payload,
+        )
 
     return {
         "status": "accepted",

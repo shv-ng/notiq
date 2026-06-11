@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = "abc123"
 
+    CELERY_MAX_RETRIES: int = 5
+
     @property
     def database_url(self) -> str:
         return (

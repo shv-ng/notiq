@@ -13,11 +13,8 @@ router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 def create_subscription(
     subs: SubscriptionCreate, session: Session = Depends(get_session)
 ):
-    new_subscription = Subscription(
-        tenant_id=subs.tenant_id,
-        event_type=subs.event_type,
-        target_url=subs.target_url,
-    )
+    data = subs.model_dump(mode="json")
+    new_subscription = Subscription(**data)
 
     session.add(new_subscription)
     session.commit()
