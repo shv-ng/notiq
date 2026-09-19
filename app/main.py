@@ -33,14 +33,14 @@ app.add_exception_handler(IntegrityError, integrity_exception_handler)
 app.add_exception_handler(DataError, data_error_exception_handler)
 app.add_exception_handler(Exception, global_exception_handler)
 
+app.include_router(tenant_router)
+app.include_router(subscription_router)
+app.include_router(events_router)
+app.include_router(dlq_router)
+app.include_router(delivery_log_router)
 
 @app.get("/")
 def health():
     return {"status": "ok"}
 
 
-app.include_router(tenant_router)
-app.include_router(subscription_router)
-app.include_router(events_router)
-app.include_router(dlq_router)
-app.include_router(delivery_log_router)

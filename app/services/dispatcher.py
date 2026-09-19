@@ -16,7 +16,7 @@ async def deliver_event(
 ) -> tuple[bool, int | None, str | None]:
     assert subscription.id is not None, "subscription don't have id"
 
-    raw_payload = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    raw_payload = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
 
     signature = sign_payload(raw_payload, settings.SECRET_KEY)
 
